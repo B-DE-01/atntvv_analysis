@@ -1,0 +1,418 @@
+---
+title: "WCGNA Analysis of At, Nt and Vv"
+---
+
+### Install all needed packages for WCGNA to work
+
+```{r}
+install.packages("RSQLite")
+BiocManager::install("GO.db")
+BiocManager::install("WGCNA")
+BiocManager::install("impute")
+
+```
+
+### Import libraries
+
+```{r}
+library(RSQLite)
+library(WGCNA)
+library(dplyr)
+library(tidyverse)
+library(magrittr)
+library(ggplot2)
+library(cluster)
+```
+
+### Load in normalised TPM data
+
+```{r}
+at_s1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s1_nc_wgcna.csv', sep = ',')
+at_s2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s2_nc_wgcna.csv', sep = ',')
+at_s3_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s3_nc_wgcna.csv', sep = ',')
+
+nt_s1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s1_nc_wgcna.csv', sep = ',')
+nt_s2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s2_nc_wgcna.csv', sep = ',')
+nt_s3_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s3_nc_wgcna.csv', sep = ',')
+
+
+vv_p1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/vv_p1_nc_wgcna.csv', sep = ',')
+vv_p2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/vv_p2_nc_wgcna.csv', sep = ',')
+
+#remove gene id column
+#rownames(at_s1_tpm) <- at_s1_tpm$GeneId
+#at_s1_tpm <- at_s1_tpm[, -1]
+#rownames(at_s2_tpm) <- at_s2_tpm$GeneId
+#at_s2_tpm <- at_s2_tpm[, -1]
+#rownames(at_s3_tpm) <- at_s3_tpm$GeneId
+#at_s3_tpm <- at_s3_tpm[, -1]
+
+rownames(nt_s1_tpm) <- nt_s1_tpm$GeneId
+nt_s1_tpm <- nt_s1_tpm[, -1]
+rownames(nt_s2_tpm) <- nt_s2_tpm$GeneId
+nt_s2_tpm <- nt_s2_tpm[, -1]
+rownames(nt_s3_tpm) <- nt_s3_tpm$GeneId
+nt_s3_tpm <- nt_s3_tpm[, -1]
+
+rownames(vv_p1_tpm) <- vv_p1_tpm$GeneId
+vv_p1_tpm <- vv_p1_tpm[, -1]
+rownames(vv_p2_tpm) <- vv_p2_tpm$GeneId
+vv_p2_tpm <- vv_p2_tpm[, -1]
+```
+
+### Merge data sets for each species
+
+```{r}
+nt_tpm <- cbind(nt_s1_tpm, nt_s2_tpm, nt_s3_tpm)
+
+
+at_tpm <- merge(at_s1_tpm, at_s2_tpm, by = 'GeneId')
+at_tpm <- merge(at_tpm, at_s3_tpm, by = 'GeneId')
+rownames(at_tpm) <- at_tpm$GeneId
+at_tpm <- at_tpm[, -1]
+
+vv_tpm <- cbind(vv_p1_tpm, vv_p2_tpm)
+
+colnames(nt_tpm) <- c('S1_M1', 'S1_M2', 'S1_M3', 'S1_M4', 'S1_M5','S1_X1', 'S1_X2', 'S1_X3', 'S1_X4', 'S1_X5','S2_M1', 'S2_M2', 'S2_M3', 'S2_M4', 'S2_M5','S2_X1', 'S2_X2', 'S2_X3', 'S2_X4','S2_X5','S3_M1', 'S3_M2', 'S3_M3', 'S3_M4', 'S3_M5','S3_X1', 'S3_X2', 'S3_X3', 'S3_X4', 'S3_X5')
+
+colnames(at_tpm) <- c('S1_M1', 'S1_M2', 'S1_M3', 'S1_M4', 'S1_M5','S1_X1', 'S1_X2', 'S1_X3', 'S1_X4', 'S1_X5','S2_M1', 'S2_M2', 'S2_M3', 'S2_M4', 'S2_M5','S2_X1', 'S2_X2', 'S2_X3', 'S2_X4','S2_X5','S3_M1', 'S3_M2', 'S3_M3', 'S3_M4', 'S3_M5','S3_X1', 'S3_X2', 'S3_X3', 'S3_X4', 'S3_X5')
+
+colnames(vv_tpm) <- c('S2_M1', 'S2_M2', 'S2_M3','S2_X1', 'S2_X2', 'S2_X3','S3_M1', 'S3_M2', 'S3_M3', 'S3_X1', 'S3_X2', 'S3_X3')
+```
+
+### Remove 0 counts so that we can get higher average reads
+
+```{r}
+remove_zero <- function(df){
+  zero_matrix <- df
+  all_zero_rows <- apply(zero_matrix, 1, function(row) all(row == 0))
+  zero_ids <-  df[all_zero_rows, 1]
+  df_filt <- df[!df[, 1] %in% zero_ids, ]
+  
+  return(df_filt)
+}
+
+at_tpm_filt <- remove_zero(at_tpm) 
+nt_tpm_filt <- remove_zero(nt_tpm)
+vv_tpm_filt <- remove_zero(vv_tpm)
+```
+
+### \*Log transform TPM values so that they are normally distributed
+
+```{r}
+#Log Transform
+at_log <- log2(at_tpm_filt + 1)
+
+nt_log <- log2(nt_tpm_filt + 1)
+
+vv_log <- log2(vv_tpm_filt + 1)
+```
+
+### Filter down Nt and Vv to fit the number of At genes
+
+```{r}
+core_orth <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/core_best_reps.tsv', sep = '\t')
+
+core_orth$at <- gsub("\\.[0-9]+$", "", core_orth$at)
+
+#Filter down on each list to find the common remaining non-zero read genes
+core_orth <- core_orth[core_orth$nt %in% rownames(nt_tpm_filt), ]
+at_tpm_filt <- at_tpm_filt[rownames(at_tpm_filt) %in% core_orth$at, ]
+vv_tpm_filt <- vv_tpm_filt[rownames(vv_tpm_filt) %in% core_orth$vv, ]
+
+#Now filter based on at
+core_orth <- core_orth[core_orth$at %in% rownames(at_tpm_filt), ]
+nt_tpm_filt <- nt_tpm_filt[rownames(nt_tpm_filt) %in% core_orth$nt, ]
+vv_tpm_filt <- vv_tpm_filt[rownames(vv_tpm_filt) %in% core_orth$vv, ]
+
+#Now filter based on vv
+core_orth <- core_orth[core_orth$vv %in% rownames(vv_tpm_filt), ]
+nt_tpm_filt <- nt_tpm_filt[rownames(nt_tpm_filt) %in% core_orth$nt, ]
+at_tpm_filt <- at_tpm_filt[rownames(at_tpm_filt) %in% core_orth$at, ]
+
+write.table(core_orth, "filtered_core_orth.tsv", sep = "\t", quote = FALSE)
+```
+
+### Combine the data sets
+
+```{r}
+#replace the gene names with the at genes so we can keep the same columns together when combining them
+vv_tpm_filt_names <- cbind(vv_tpm_filt, rownames(vv_tpm_filt))
+vv_tpm_filt_names <- vv_tpm_filt_names %>%
+  rename('vv' = names(vv_tpm_filt_names)[ncol(vv_tpm_filt_names)])
+                     
+vv_tpm_with_pairs <- vv_tpm_filt_names %>%
+  left_join(core_orth, by = "vv")
+rownames(vv_tpm_with_pairs) <- vv_tpm_with_pairs$at
+vv_tpm_with_pairs <- vv_tpm_with_pairs[, -c(13, 14, 15)]
+
+#Nt
+nt_tpm_filt_names <- cbind(nt_tpm_filt, rownames(nt_tpm_filt))
+nt_tpm_filt_names <- nt_tpm_filt_names %>%
+  rename('nt' = names(nt_tpm_filt_names)[ncol(nt_tpm_filt_names)])
+                     
+nt_tpm_with_pairs <- nt_tpm_filt_names %>%
+  left_join(core_orth, by = "nt")
+rownames(nt_tpm_with_pairs) <- nt_tpm_with_pairs$at
+nt_tpm_with_pairs <- nt_tpm_with_pairs[, -c(31, 32, 33)]
+
+
+combined_df <- merge(at_tpm_filt, nt_tpm_with_pairs, by = 'row.names')
+rownames(combined_df) <- combined_df$Row.names
+combined_df$Row.names <- NULL
+
+combined_df <- merge(combined_df, vv_tpm_with_pairs, by = 'row.names')
+rownames(combined_df) <- combined_df$Row.names
+combined_df$Row.names <- NULL
+
+names(combined_df) <- c('A_S1_M1', 'A_S1_M2', 'A_S1_M3', 'A_S1_M4', 'A_S1_M5','A_S1_X1', 'A_S1_X2', 'A_S1_X3', 'A_S1_X4', 'A_S1_X5','A_S2_M1', 'A_S2_M2', 'A_S2_M3', 'A_S2_M4', 'A_S2_M5','A_S2_X1', 'A_S2_X2', 'A_S2_X3', 'A_S2_X4','A_S2_X5','A_S3_M1', 'A_S3_M2', 'A_S3_M3', 'A_S3_M4', 'A_S3_M5','A_S3_X1', 'A_S3_X2', 'A_S3_X3', 'A_S3_X4', 'A_S3_X5', 'N_S1_M1', 'N_S1_M2', 'N_S1_M3', 'N_S1_M4', 'N_S1_M5','N_S1_X1', 'N_S1_X2', 'N_S1_X3', 'N_S1_X4', 'N_S1_X5','N_S2_M1', 'N_S2_M2', 'N_S2_M3', 'N_S2_M4', 'N_S2_M5','N_S2_X1', 'N_S2_X2', 'N_S2_X3', 'N_S2_X4','N_S2_X5','N_S3_M1', 'N_S3_M2', 'N_S3_M3', 'N_S3_M4', 'N_S3_M5','N_S3_X1', 'N_S3_X2', 'N_S3_X3', 'N_S3_X4', 'N_S3_X5', 'V_S2_M1', 'V_S2_M2', 'V_S2_M3','V_S2_X1', 'V_S2_X2', 'V_S2_X3','V_S3_M1', 'V_S3_M2', 'V_S3_M3', 'V_S3_X1', 'V_S3_X2', 'V_S3_X3')
+```
+
+### Averaged Replicates
+
+```{r}
+numeric_combined_df <- combined_df
+
+# Create an empty dataframe to store averages
+averaged_df <- data.frame(matrix(ncol = 16, nrow = 0))
+
+for(row in 1:nrow(numeric_combined_df)){
+  a_ms1 <- mean(unlist(unname(numeric_combined_df[row, 1:5])))
+  a_xs1 <- mean(unlist(unname(numeric_combined_df[row, 6:10])))
+  a_ms2 <- mean(unlist(unname(numeric_combined_df[row, 11:15])))
+  a_xs2 <- mean(unlist(unname(numeric_combined_df[row, 16:20])))
+  a_ms3 <- mean(unlist(unname(numeric_combined_df[row, 21:25])))
+  a_xs3 <- mean(unlist(unname(numeric_combined_df[row, 26:30])))
+  
+  n_ms1 <- mean(unlist(unname(numeric_combined_df[row, 31:35])))
+  n_xs1 <- mean(unlist(unname(numeric_combined_df[row, 36:40])))
+  n_ms2 <- mean(unlist(unname(numeric_combined_df[row, 41:45])))
+  n_xs2 <- mean(unlist(unname(numeric_combined_df[row, 46:50])))
+  n_ms3 <- mean(unlist(unname(numeric_combined_df[row, 51:55])))
+  n_xs3 <- mean(unlist(unname(numeric_combined_df[row, 56:60])))
+  
+  v_ms2 <- mean(unlist(unname(numeric_combined_df[row, 61:63])))
+  v_xs2 <- mean(unlist(unname(numeric_combined_df[row, 64:66])))
+  v_ms3 <- mean(unlist(unname(numeric_combined_df[row, 67:69])))
+  v_xs3 <- mean(unlist(unname(numeric_combined_df[row, 70:72])))
+  
+  avg_row <- list(a_ms1, a_xs1, a_ms2, a_xs2, a_ms3, a_xs3, n_ms1, n_xs1, n_ms2, n_xs2, n_ms3, n_xs3, v_ms2, v_xs2, v_ms3, v_xs3)
+  
+  averaged_df <- rbind(averaged_df, avg_row)
+}
+colnames(averaged_df) <- c('a_m_s1', 'a_x_s1', 'a_m_s2', 'a_x_s2', 'a_m_s3', 'a_x_s3', 'n_m_s1', 'n_x_s1', 'n_m_s2', 'n_x_s2', 'n_m_s3', 'n_x_s3', 'v_m_s2', 'v_x_s2', 'v_m_s3', 'v_x_s3')
+
+rownames(averaged_df) <- rownames(combined_df)
+
+```
+
+### Determine parameters for WGCNA
+
+```{r}
+tlog_averaged_df <- t(log2(averaged_df + 1))
+
+sft <- pickSoftThreshold(tlog_averaged_df,
+  dataIsExpr = TRUE,
+  corFnc = cor,
+  networkType = "signed"
+)
+
+sft_df <- data.frame(sft$fitIndices) %>%
+  dplyr::mutate(model_fit = -sign(slope) * SFT.R.sq)
+
+ggplot(sft_df, aes(x = Power, y = model_fit, label = Power)) +
+  # Plot the points
+  geom_point() +
+  # We'll put the Power labels slightly above the data points
+  geom_text(nudge_y = 0.1) +
+  # We will plot what WGCNA recommends as an R^2 cutoff
+  geom_hline(yintercept = 0.80, col = "red") +
+  # Just in case our values are low, we want to make sure we can still see the 0.80 level
+  ylim(c(min(sft_df$model_fit), 1.05)) +
+  # We can add more sensible labels for our axis
+  xlab("Soft Threshold (power)") +
+  ylab("Scale Free Topology Model Fit, signed R^2") +
+  ggtitle("Scale independence") +
+  # This adds some nicer aesthetics to our plot
+  theme_classic()
+```
+
+### Make WGCNA Dendrogram
+
+```{r}
+picked_power = 14
+temp_cor <- cor       
+cor <- WGCNA::cor         # Force it to use WGCNA cor function (fix a namespace conflict issue)
+netwk <- blockwiseModules(tlog_averaged_df,                # <= input here
+
+                          # == Adjacency Function ==
+                          power = picked_power,                # <= power here
+                          networkType = "signed",
+
+                          # == Tree and Block Options ==
+                          deepSplit = 2,
+                          pamRespectsDendro = F,
+                          # detectCutHeight = 0.75,
+                          minModuleSize = 30,
+                          maxBlockSize = 10000,
+
+                          # == Module Adjustments ==
+                          reassignThreshold = 0,
+                          mergeCutHeight = 0.25,
+
+                          # == TOM == Archive the run results in TOM file (saves time)
+                          saveTOMs = T,
+                          saveTOMFileBase = "ER",
+
+                          # == Output Options
+                          numericLabels = T,
+                          verbose = 3)
+cor <- temp_cor 
+
+mergedColors = labels2colors(netwk$colors)
+# Plot the dendrogram and the module colors underneath
+plotDendroAndColors(
+  netwk$dendrograms[[1]],
+  mergedColors[netwk$blockGenes[[1]]],
+  "Module colors",
+  dendroLabels = FALSE,
+  hang = 0.03,
+  addGuide = TRUE,
+  guideHang = 0.05 )
+
+module_df <- data.frame(
+  gene_id = names(netwk$colors),
+  colors = labels2colors(netwk$colors)
+)
+
+#write_delim(module_df,
+            #file = "gene_modules_nc_log_avg_wgcna.txt",
+            #delim = "\t")
+```
+
+### Plot modules
+
+```{r}
+# Get Module Eigengenes per cluster
+MEs0 <- moduleEigengenes(tlog_averaged_df, mergedColors)$eigengenes
+
+# Reorder modules so similar modules are next to each other
+MEs0 <- orderMEs(MEs0)
+module_order = names(MEs0) %>% gsub("ME","", .)
+
+# Add treatment names
+MEs0$treatment = row.names(MEs0)
+
+# tidy & plot data
+mME = MEs0 %>%
+  pivot_longer(-treatment) %>%
+  mutate(
+    name = gsub("ME", "", name),
+    name = factor(name, levels = module_order)
+  )
+
+
+level_order <- c('a_m_s1', 'a_x_s1', 'a_m_s2', 'a_x_s2', 'a_m_s3', 'a_x_s3', 'n_m_s1', 'n_x_s1', 'n_m_s2', 'n_x_s2', 'n_m_s3', 'n_x_s3', 'v_m_s2', 'v_x_s2', 'v_m_s3', 'v_x_s3')
+module_plot <- mME %>% ggplot(., aes(x=treatment, y=name, fill=value)) +
+  geom_tile() +
+  scale_x_discrete(limits = level_order) +
+  theme_bw() +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0,
+    limit = c(-1,1)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  labs(title = "Module-trait Relationships", y = "Modules", fill="corr")
+
+module_plot
+#ggsave("log_avg_module_heatmap.pdf", plot = module_plot, width = 8, height = 6)
+```
+
+### Make networks for each module
+
+```{r}
+#library(igraph)
+
+#prrs <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/at_prr_list.txt")
+
+
+#grey = 1, red = 2, black = 3, magenta = 4, turquoise = 5, brown = 6, yellow = 7, green = 8, pink = 9, blue = 10
+module <- "blue"  # Change to the name of your module
+module_genes <- module_df$gene_id[module_df$colors == module]
+prr_module_genes <- module_genes[module_genes %in% prrs$GeneID] #filter down to only PRRs
+
+# Get the expression data for the module genes
+exprDataModule <- tlog_averaged_df[, prr_module_genes]
+
+# Compute the correlation matrix for the module genes
+correlation_matrix_module <- cor(exprDataModule, method = "pearson")
+
+# Define the threshold value for including edges
+threshold <- 0.8  # Adjust as necessary
+
+# Create the weighted adjacency matrix
+# Retain correlation values above the threshold, set others to 0
+adjacency_matrix_module <- ifelse(correlation_matrix_module > threshold, correlation_matrix_module, 0)
+
+# Create a graph object using igraph with weights
+network_module <- graph_from_adjacency_matrix(adjacency_matrix_module, mode = "undirected", weighted = TRUE)
+
+edge_weights <- E(network_module)$weight
+edge_weights_normalized <- (edge_weights - threshold) / (max(edge_weights) - threshold)  
+
+# Define a color palette for the edges
+color_palette <- colorRampPalette(c("lightblue", "darkblue"))  # Gradient from light blue to dark blue
+edge_colors <- color_palette(100)[as.numeric(cut(edge_weights_normalized, breaks = 100))]  # Map normalized values to colors
+
+# Remove self-loops
+network_module <- delete_edges(network_module, which(ends(network_module, E(network_module))[,1] == ends(network_module, E(network_module))[,2]))
+
+
+
+
+edge_attributes <- data.frame(
+  source = ends(network_module, E(network_module))[,1],
+  target = ends(network_module, E(network_module))[,2],
+  weight = E(network_module)$weight
+)
+
+# Export edge attributes
+write.csv(edge_attributes, file = "module10_edges.csv", row.names = FALSE)
+
+
+node_attributes <- data.frame(
+  id = V(network_module)$name
+)
+
+# Export node attributes to CSV
+write.csv(node_attributes, file = "module10_nodes.csv", row.names = FALSE)
+
+
+
+
+# Plot the network using a suitable layout
+pdf("network_plot.pdf", width = 12, height = 10)
+plot(network_module, layout = layout_with_kk(network_module), 
+     vertex.label = V(network_module)$name, 
+     vertex.size = 3, 
+     edge.width = E(network_module)$weight * 1,  # Adjust scaling for better visibility
+     edge.color = edge_colors)  # Optional: Adjust edge color and transparency
+dev.off()
+
+
+```
+
+```{r}
+correlation_matrix <- cor(tlog_averaged_df, method = "pearson")
+
+# Convert correlation to adjacency matrix by applying a threshold
+threshold <- 0.5  # Adjust to keep stronger connections
+adjacency_matrix <- (correlation_matrix > threshold) * 1
+
+network <- graph.adjacency(adjacency_matrix, mode = "undirected", weighted = TRUE)
+
+# Plot the network using a suitable layout
+plot(network, layout = layout_with_kk(network), vertex.label = V(network)$name, vertex.size = 5, edge.width = E(network)$weight * 10)
+```
