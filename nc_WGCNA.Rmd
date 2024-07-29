@@ -27,17 +27,17 @@ library(cluster)
 ### Load in normalised TPM data
 
 ```{r}
-at_s1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s1_nc_wgcna.csv', sep = ',')
-at_s2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s2_nc_wgcna.csv', sep = ',')
-at_s3_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s3_nc_wgcna.csv', sep = ',')
+at_s1_tpm <- read.delim("at_s1_tpm.txt")
+at_s2_tpm <- read.delim("at_s2_tpm.txt")
+at_s3_tpm <- read.delim("at_s3_tpm.txt")
 
-nt_s1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s1_nc_wgcna.csv', sep = ',')
-nt_s2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s2_nc_wgcna.csv', sep = ',')
-nt_s3_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s3_nc_wgcna.csv', sep = ',')
+nt_s1_tpm <- read.delim("nt_s1_tpm.txt")
+nt_s2_tpm <- read.delim("nt_s2_tpm.txt")
+nt_s3_tpm <- read.delim("nt_s3_tpm.txt")
 
 
-vv_p1_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/vv_p1_nc_wgcna.csv', sep = ',')
-vv_p2_tpm <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/vv_p2_nc_wgcna.csv', sep = ',')
+vv_p1_tpm <- read.delim("vv_p1_tpm.txt")
+vv_p2_tpm <- read.delim("vv_p2_tpm.txt")
 
 #remove gene id column
 #rownames(at_s1_tpm) <- at_s1_tpm$GeneId
@@ -111,7 +111,7 @@ vv_log <- log2(vv_tpm_filt + 1)
 ### Filter down Nt and Vv to fit the number of At genes
 
 ```{r}
-core_orth <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/core_best_reps.tsv', sep = '\t')
+core_orth <- read.delim('core_orth.txt')
 
 core_orth$at <- gsub("\\.[0-9]+$", "", core_orth$at)
 
@@ -333,9 +333,9 @@ module_plot
 ### Make networks for each module
 
 ```{r}
-#library(igraph)
+library(igraph)
 
-#prrs <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/at_prr_list.txt")
+prrs <- read.delim("RGs.txt")
 
 
 #grey = 1, red = 2, black = 3, magenta = 4, turquoise = 5, brown = 6, yellow = 7, green = 8, pink = 9, blue = 10
