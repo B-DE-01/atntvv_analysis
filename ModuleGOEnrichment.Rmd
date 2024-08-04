@@ -1,0 +1,113 @@
+---
+title: "Module GO Enrichment"
+---
+
+### Import libraries
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+```
+
+### Import modules and make into wide format then export for NCBI DAVID
+
+```{r}
+gene_modules <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/gene_modules_nc_log_avg_wgcna.txt")
+
+gene_modules_wide <- gene_modules %>% 
+  group_by(colors) %>%
+  mutate(id = row_number()) %>%
+  pivot_wider(names_from = colors, values_from = gene_id) %>%
+  select(-id)
+
+#reassign names into numbers based on the following:
+#grey = 1, red = 2, black = 3, magenta = 4, turquoise = 5, brown = 6, yellow = 7, green = 8, pink = 9, blue = 10
+colnames(gene_modules_wide) <- c('m5', 'm7', 'm10', 'm8', 'm3', 'm6', 'm1', 'm4', 'm2', 'm9')
+
+write.csv(gene_modules_wide, file = 'gene_modules_wide.csv')
+
+```
+
+### Import back in modules from NCBI DAVID
+
+```{r}
+module1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module1_go.txt")
+module2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module2_go.txt")
+module3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module3_go.txt")
+module4 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module4_go.txt")
+module5 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module5_go.txt")
+module6 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module6_go.txt")
+module7 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module7_go.txt")
+module8 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module8_go.txt")
+module9 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module9_go.txt")
+module10 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module10_go.txt")
+```
+
+### Filter Modules for non-significant and low fold enrichment terms
+
+```{r}
+filtergo <- function(module){
+  module <- module %>%
+    filter(Fold.Enrichment >= 4, FDR <= 0.03) %>%
+    dplyr::select(Category, Term, Count, PValue, Genes, Fold.Enrichment, FDR)
+  return(module)
+}
+
+module1_filt <- filtergo(module1)
+module2_filt <- filtergo(module2)
+module3_filt <- filtergo(module3)
+module4_filt <- filtergo(module4)
+module5_filt <- filtergo(module5)
+module6_filt <- filtergo(module6)
+module7_filt <- filtergo(module7)
+module8_filt <- filtergo(module8)
+module9_filt <- filtergo(module9)
+module10_filt <- filtergo(module10)
+```
+
+### Plot each module so that we have the term, fold enrichment and the FDR as the scale
+
+```{r}
+# Create the horizontal bar chart
+plotgo <- function(module_filt, ptitle){
+  ggplot(module_filt, aes(x = reorder(Term, `Fold.Enrichment`), y = `Fold.Enrichment`, fill = FDR)) +
+  geom_bar(stat = "identity") +
+    coord_flip() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue",
+                      limits = c(0, 0.03),  # Adjust limits based on your data
+                      breaks = seq(0, 0.03, by = 0.005)) +
+  labs(title = ptitle, x = "Term", y = "Fold Enrichment", fill = "FDR") +
+  theme_minimal()
+}
+
+```
+
+```{r}
+#module1 has no clusters left
+plot2 <- plotgo(module2_filt, 'Module 2')
+plot3 <- plotgo(module3_filt, 'Module 3')
+#module4 has no clusters left
+plot5 <- plotgo(module5_filt, 'Module 5')
+plot6 <- plotgo(module6_filt, 'Module 6')
+plot7 <- plotgo(module7_filt, 'Module 7')
+plot8 <- plotgo(module8_filt, 'Module 8')
+plot9 <- plotgo(module9_filt, 'Module 9')
+plot10 <- plotgo(module10_filt, 'Module 10')
+
+ggsave('module2_plot.pdf', plot = plot2, height = 6, width = 12)
+ggsave('module3_plot.pdf', plot = plot3, height = 6, width = 12)
+ggsave('module5_plot.pdf', plot = plot5, height = 6, width = 12)
+ggsave('module6_plot.pdf', plot = plot6, height = 6, width = 12)
+ggsave('module7_plot.pdf', plot = plot7, height = 6, width = 12)
+ggsave('module8_plot.pdf', plot = plot8, height = 6, width = 12)
+ggsave('module9_plot.pdf', plot = plot9, height = 6, width = 12)
+ggsave('module10_plot.pdf', plot = plot10, height = 6, width = 12)
+```
+
+```{r}
+cluster7 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/MaSigPro/cluster7_go.txt")
+
+cluster7 <- filtergo(cluster7)
+plotgo(cluster7, 'Cluster 7')
+```
