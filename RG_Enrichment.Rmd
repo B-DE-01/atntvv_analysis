@@ -1,7 +1,3 @@
----
-title: "GO Cluster Analysis"
----
-
 ### Import libraries
 
 ```{r}
@@ -10,26 +6,26 @@ library(dplyr)
 library(ggplot2)
 ```
 
-### Import PRRs and modules
+### Import RG and modules
 
 ```{r}
-prrs <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/at_prr_list.txt')
-colnames(prrs) <- "Genes"
+RG <- read.delim('')
+colnames(RG) <- "Genes"
 
-metabolites <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/metabolite_genes.txt")
+metabolites <- read.delim("")
 
 metabolites$Genes <- gsub("\\.[0-9]+$", "", metabolites$Genes)
 
-module1 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module1_go.txt')
-module2 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module2_go.txt')
-module3 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module3_go.txt')
-module4 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module4_go.txt')
-module5 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module5_go.txt')
-module6 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module6_go.txt')
-module7 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module7_go.txt')
-module8 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module8_go.txt')
-module9 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module9_go.txt')
-module10 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module10_go.txt')
+module1 <- read.delim('')
+module2 <- read.delim('')
+module3 <- read.delim('')
+module4 <- read.delim('')
+module5 <- read.delim('')
+module6 <- read.delim('')
+module7 <- read.delim('')
+module8 <- read.delim('')
+module9 <- read.delim('')
+module10 <- read.delim('')
 ```
 
 ### Get a list of only the genes in each module
@@ -59,28 +55,28 @@ module10_genes <- module10 %>% select(Genes) %>% separate_rows(Genes, sep = ',')
 ### Filter to only RGs within each module
 
 ```{r}
-module1_prrs <- merge(module1_genes, prrs, by = 'Genes')
-module2_prrs <- merge(module2_genes, prrs, by = 'Genes')
-module3_prrs <- merge(module3_genes, prrs, by = 'Genes')
-module4_prrs <- merge(module4_genes, prrs, by = 'Genes')
-module5_prrs <- merge(module5_genes, prrs, by = 'Genes')
-module6_prrs <- merge(module6_genes, prrs, by = 'Genes')
-module7_prrs <- merge(module7_genes, prrs, by = 'Genes')
-module8_prrs <- merge(module8_genes, prrs, by = 'Genes')
-module9_prrs <- merge(module9_genes, prrs, by = 'Genes')
-module10_prrs <- merge(module10_genes, prrs, by = 'Genes')
+module1_RG <- merge(module1_genes, RG, by = 'Genes')
+module2_RG <- merge(module2_genes, RG, by = 'Genes')
+module3_RG <- merge(module3_genes, RG, by = 'Genes')
+module4_RG <- merge(module4_genes, RG, by = 'Genes')
+module5_RG <- merge(module5_genes, RG, by = 'Genes')
+module6_RG <- merge(module6_genes, RG, by = 'Genes')
+module7_RG <- merge(module7_genes, RG, by = 'Genes')
+module8_RG <- merge(module8_genes, RG, by = 'Genes')
+module9_RG <- merge(module9_genes, RG, by = 'Genes')
+module10_RG <- merge(module10_genes, RG, by = 'Genes')
 
 
-print(paste('Module 1 has ', nrow(module1_prrs),' RGs out of ', nrow(module1_genes), 'or ', (nrow(module1_prrs)/nrow(module1_genes))*100, '%'))
-print(paste('Module 2 has ', nrow(module2_prrs),' RGs out of ', nrow(module2_genes), 'or ', (nrow(module2_prrs)/nrow(module2_genes))*100, '%'))
-print(paste('Module 3 has ', nrow(module3_prrs),' RGs out of ', nrow(module3_genes), 'or ', (nrow(module3_prrs)/nrow(module3_genes))*100, '%'))
-print(paste('Module 4 has ', nrow(module4_prrs),' RGs out of ', nrow(module4_genes), 'or ', (nrow(module4_prrs)/nrow(module4_genes))*100, '%'))
-print(paste('Module 5 has ', nrow(module5_prrs),' RGs out of ', nrow(module5_genes), 'or ', (nrow(module5_prrs)/nrow(module5_genes))*100, '%'))
-print(paste('Module 6 has ', nrow(module6_prrs),' RGs out of ', nrow(module6_genes), 'or ', (nrow(module6_prrs)/nrow(module6_genes))*100, '%'))
-print(paste('Module 7 has ', nrow(module7_prrs),' RGs out of ', nrow(module7_genes), 'or ', (nrow(module7_prrs)/nrow(module7_genes))*100, '%'))
-print(paste('Module 8 has ', nrow(module8_prrs),' RGs out of ', nrow(module8_genes), 'or ', (nrow(module8_prrs)/nrow(module8_genes))*100, '%'))
-print(paste('Module 9 has ', nrow(module9_prrs),' RGs out of ', nrow(module9_genes), 'or ', (nrow(module9_prrs)/nrow(module9_genes))*100, '%'))
-print(paste('Module 10 has ', nrow(module10_prrs),' RGs out of ', nrow(module10_genes), 'or ', (nrow(module10_prrs)/nrow(module10_genes))*100, '%'))
+print(paste('Module 1 has ', nrow(module1_RG),' RGs out of ', nrow(module1_genes), 'or ', (nrow(module1_RG)/nrow(module1_genes))*100, '%'))
+print(paste('Module 2 has ', nrow(module2_RG),' RGs out of ', nrow(module2_genes), 'or ', (nrow(module2_RG)/nrow(module2_genes))*100, '%'))
+print(paste('Module 3 has ', nrow(module3_RG),' RGs out of ', nrow(module3_genes), 'or ', (nrow(module3_RG)/nrow(module3_genes))*100, '%'))
+print(paste('Module 4 has ', nrow(module4_RG),' RGs out of ', nrow(module4_genes), 'or ', (nrow(module4_RG)/nrow(module4_genes))*100, '%'))
+print(paste('Module 5 has ', nrow(module5_RG),' RGs out of ', nrow(module5_genes), 'or ', (nrow(module5_RG)/nrow(module5_genes))*100, '%'))
+print(paste('Module 6 has ', nrow(module6_RG),' RGs out of ', nrow(module6_genes), 'or ', (nrow(module6_RG)/nrow(module6_genes))*100, '%'))
+print(paste('Module 7 has ', nrow(module7_RG),' RGs out of ', nrow(module7_genes), 'or ', (nrow(module7_RG)/nrow(module7_genes))*100, '%'))
+print(paste('Module 8 has ', nrow(module8_RG),' RGs out of ', nrow(module8_genes), 'or ', (nrow(module8_RG)/nrow(module8_genes))*100, '%'))
+print(paste('Module 9 has ', nrow(module9_RG),' RGs out of ', nrow(module9_genes), 'or ', (nrow(module9_RG)/nrow(module9_genes))*100, '%'))
+print(paste('Module 10 has ', nrow(module10_RG),' RGs out of ', nrow(module10_genes), 'or ', (nrow(module10_RG)/nrow(module10_genes))*100, '%'))
 ```
 
 ### Filter to only metabolite genes within each module
@@ -113,7 +109,7 @@ print(paste('Module 10 has ', nrow(module10_metab),' Metabolic Genes'))
 ### Check for SGs
 
 ```{r}
-sgs <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/suscep_genes.txt")
+sgs <- read.delim("")
 nrow(merge(module1_genes, sgs, by = 'Genes'))
 nrow(merge(module2_genes, sgs, by = 'Genes'))
 nrow(merge(module3_genes, sgs, by = 'Genes'))
@@ -130,12 +126,12 @@ nrow(merge(module10_genes, sgs, by = 'Genes'))
 
 ```{r}
 #We need to find the population amount of RGs in the core orthologs 
-core_orth <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/filtered_core_orth.tsv")
-actual_prrs <- core_orth$at[core_orth$at %in% prrs$Genes]
+core_orth <- read.delim("")
+actual_RG <- core_orth$at[core_orth$at %in% RG$Genes]
 
 
 #Get expected and observed values
-population_fraction <- length(actual_prrs) / nrow(core_orth)
+population_fraction <- length(actual_RG) / nrow(core_orth)
 observed_counts <- c(0, 6, 0, 1, 9, 3, 11, 17, 6, 8)
 module_sizes <- c(20,  335,  189,   28, 2094,  589,  581,  446,   99, 1270)
 modules <- c("Module1", "Module2", "Module3", "Module4", "Module5", 
