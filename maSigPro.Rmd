@@ -1,5 +1,5 @@
 ---
-title: "MaSigPro Non-Collinear"
+title: "MaSigPro"
 ---
 
 ### Load packages
@@ -22,7 +22,7 @@ library(dplyr)
 ### Import and format experimental design
 
 ```{r}
-edesignat <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Collinear/MaSigPro/at_nt_timepoint_design.txt")
+edesignat <- read.delim(")
 row.names(edesignat) <- edesignat$X
 edesign <- edesignat[, c(2:ncol(edesignat))]
 rm(edesignat)
@@ -31,18 +31,18 @@ rm(edesignat)
 ### Put columns in the correct order according to the experimental design
 
 ```{r}
-core_reps <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/at_nt_bestreps.tsv", sep = "\t")
+core_reps <- read.delim("")
 
 core_reps$nt <- sub(".*\\|", "", core_reps$nt)
 core_reps$at <- sub(".*\\|", "", core_reps$at)
 
-at_s1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s1_nc_wgcna.csv", sep = ",")
-at_s2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s2_nc_wgcna.csv", sep = ",")
-at_s3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s3_nc_wgcna.csv", sep = ",")
+at_s1 <- read.delim("")
+at_s2 <- read.delim("")
+at_s3 <- read.delim("")
 
-nt_s1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s1_nc_wgcna.csv", sep = ",")
-nt_s2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s2_nc_wgcna.csv", sep = ",")
-nt_s3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s3_nc_wgcna.csv", sep = ",")
+nt_s1 <- read.delim("")
+nt_s2 <- read.delim("")
+nt_s3 <- read.delim("")
 
 remove_zero <- function(df){
   zero_matrix <- df[, -1]
@@ -151,13 +151,6 @@ write.table(as.data.frame(gene_clusters$cut), file = 'signif_c.tsv', sep = '\t')
 ```{r}
 highdegenes <- total_counts_df[rownames(total_counts_df) %in% rownames(Ntt$sol[Ntt$sol$`R-squared` > 0.98,]), ]
 heatmap(as.matrix(highdegenes), Rowv = NA, Colv = NA, scale = "row", margins = c(8, 8), xlab = "Stage")
-```
-
-```{r}
-# plot Venn diagram for specific groups
-get_groups <- get.siggenes(Ntt, rsq = 0.6, vars="groups")
-get_groups$summary
-suma2Venn(get_groups$summary)
 ```
 
 ```{r}
