@@ -13,7 +13,7 @@ library(ggplot2)
 ### Import modules and make into wide format then export for NCBI DAVID
 
 ```{r}
-gene_modules <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/gene_modules_nc_log_avg_wgcna.txt")
+gene_modules <- read.delim("")
 
 gene_modules_wide <- gene_modules %>% 
   group_by(colors) %>%
@@ -32,16 +32,16 @@ write.csv(gene_modules_wide, file = 'gene_modules_wide.csv')
 ### Import back in modules from NCBI DAVID
 
 ```{r}
-module1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module1_go.txt")
-module2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module2_go.txt")
-module3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module3_go.txt")
-module4 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module4_go.txt")
-module5 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module5_go.txt")
-module6 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module6_go.txt")
-module7 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module7_go.txt")
-module8 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module8_go.txt")
-module9 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module9_go.txt")
-module10 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module10_go.txt")
+module1 <- read.delim("")
+module2 <- read.delim("")
+module3 <- read.delim("")
+module4 <- read.delim("")
+module5 <- read.delim("")
+module6 <- read.delim("")
+module7 <- read.delim("")
+module8 <- read.delim("")
+module9 <- read.delim("")
+module10 <- read.delim("")
 ```
 
 ### Filter Modules for non-significant and low fold enrichment terms
@@ -106,7 +106,7 @@ ggsave('module10_plot.pdf', plot = plot10, height = 6, width = 12)
 ```
 
 ```{r}
-cluster7 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/MaSigPro/cluster7_go.txt")
+cluster7 <- read.delim("")
 
 cluster7 <- filtergo(cluster7)
 plotgo(cluster7, 'Cluster 7')
