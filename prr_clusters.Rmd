@@ -1,0 +1,184 @@
+---
+title: "GO Cluster Analysis"
+---
+
+### Import libraries
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+### Import PRRs and modules
+
+```{r}
+prrs <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/at_prr_list.txt')
+colnames(prrs) <- "Genes"
+
+metabolites <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/metabolite_genes.txt")
+
+metabolites$Genes <- gsub("\\.[0-9]+$", "", metabolites$Genes)
+
+module1 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module1_go.txt')
+module2 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module2_go.txt')
+module3 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module3_go.txt')
+module4 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module4_go.txt')
+module5 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module5_go.txt')
+module6 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module6_go.txt')
+module7 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module7_go.txt')
+module8 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module8_go.txt')
+module9 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module9_go.txt')
+module10 <- read.delim('/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/GO/module10_go.txt')
+```
+
+### Get a list of only the genes in each module
+
+```{r}
+module1_genes <- module1 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module2_genes <- module2 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module3_genes <- module3 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module4_genes <- module4 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module5_genes <- module5 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module6_genes <- module6 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module7_genes <- module7 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module8_genes <- module8 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module9_genes <- module9 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+
+module10_genes <- module10 %>% select(Genes) %>% separate_rows(Genes, sep = ',') %>% mutate(Genes = str_trim(Genes)) %>% distinct()
+```
+
+### Filter to only RGs within each module
+
+```{r}
+module1_prrs <- merge(module1_genes, prrs, by = 'Genes')
+module2_prrs <- merge(module2_genes, prrs, by = 'Genes')
+module3_prrs <- merge(module3_genes, prrs, by = 'Genes')
+module4_prrs <- merge(module4_genes, prrs, by = 'Genes')
+module5_prrs <- merge(module5_genes, prrs, by = 'Genes')
+module6_prrs <- merge(module6_genes, prrs, by = 'Genes')
+module7_prrs <- merge(module7_genes, prrs, by = 'Genes')
+module8_prrs <- merge(module8_genes, prrs, by = 'Genes')
+module9_prrs <- merge(module9_genes, prrs, by = 'Genes')
+module10_prrs <- merge(module10_genes, prrs, by = 'Genes')
+
+
+print(paste('Module 1 has ', nrow(module1_prrs),' RGs out of ', nrow(module1_genes), 'or ', (nrow(module1_prrs)/nrow(module1_genes))*100, '%'))
+print(paste('Module 2 has ', nrow(module2_prrs),' RGs out of ', nrow(module2_genes), 'or ', (nrow(module2_prrs)/nrow(module2_genes))*100, '%'))
+print(paste('Module 3 has ', nrow(module3_prrs),' RGs out of ', nrow(module3_genes), 'or ', (nrow(module3_prrs)/nrow(module3_genes))*100, '%'))
+print(paste('Module 4 has ', nrow(module4_prrs),' RGs out of ', nrow(module4_genes), 'or ', (nrow(module4_prrs)/nrow(module4_genes))*100, '%'))
+print(paste('Module 5 has ', nrow(module5_prrs),' RGs out of ', nrow(module5_genes), 'or ', (nrow(module5_prrs)/nrow(module5_genes))*100, '%'))
+print(paste('Module 6 has ', nrow(module6_prrs),' RGs out of ', nrow(module6_genes), 'or ', (nrow(module6_prrs)/nrow(module6_genes))*100, '%'))
+print(paste('Module 7 has ', nrow(module7_prrs),' RGs out of ', nrow(module7_genes), 'or ', (nrow(module7_prrs)/nrow(module7_genes))*100, '%'))
+print(paste('Module 8 has ', nrow(module8_prrs),' RGs out of ', nrow(module8_genes), 'or ', (nrow(module8_prrs)/nrow(module8_genes))*100, '%'))
+print(paste('Module 9 has ', nrow(module9_prrs),' RGs out of ', nrow(module9_genes), 'or ', (nrow(module9_prrs)/nrow(module9_genes))*100, '%'))
+print(paste('Module 10 has ', nrow(module10_prrs),' RGs out of ', nrow(module10_genes), 'or ', (nrow(module10_prrs)/nrow(module10_genes))*100, '%'))
+```
+
+### Filter to only metabolite genes within each module
+
+```{r}
+module1_metab <- merge(module1_genes, metabolites, by = 'Genes')
+module2_metab <- merge(module2_genes, metabolites, by = 'Genes')
+module3_metab <- merge(module3_genes, metabolites, by = 'Genes')
+module4_metab <- merge(module4_genes, metabolites, by = 'Genes')
+module5_metab <- merge(module5_genes, metabolites, by = 'Genes')
+module6_metab <- merge(module6_genes, metabolites, by = 'Genes')
+module7_metab <- merge(module7_genes, metabolites, by = 'Genes')
+module8_metab <- merge(module8_genes, metabolites, by = 'Genes')
+module9_metab <- merge(module9_genes, metabolites, by = 'Genes')
+module10_metab <- merge(module10_genes, metabolites, by = 'Genes')
+
+
+print(paste('Module 1 has ', nrow(module1_metab),' Metabolic Genes'))
+print(paste('Module 2 has ', nrow(module2_metab),' Metabolic Genes'))
+print(paste('Module 3 has ', nrow(module3_metab),' Metabolic Genes'))
+print(paste('Module 4 has ', nrow(module4_metab),' Metabolic Genes'))
+print(paste('Module 5 has ', nrow(module5_metab),' Metabolic Genes'))
+print(paste('Module 6 has ', nrow(module6_metab),' Metabolic Genes'))
+print(paste('Module 7 has ', nrow(module7_metab),' Metabolic Genes'))
+print(paste('Module 8 has ', nrow(module8_metab),' Metabolic Genes'))
+print(paste('Module 9 has ', nrow(module9_metab),' Metabolic Genes'))
+print(paste('Module 10 has ', nrow(module10_metab),' Metabolic Genes'))
+```
+
+### Check for SGs
+
+```{r}
+sgs <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/suscep_genes.txt")
+nrow(merge(module1_genes, sgs, by = 'Genes'))
+nrow(merge(module2_genes, sgs, by = 'Genes'))
+nrow(merge(module3_genes, sgs, by = 'Genes'))
+nrow(merge(module4_genes, sgs, by = 'Genes'))
+nrow(merge(module5_genes, sgs, by = 'Genes'))
+nrow(merge(module6_genes, sgs, by = 'Genes'))
+nrow(merge(module7_genes, sgs, by = 'Genes'))
+print((merge(module8_genes, sgs, by = 'Genes')))
+nrow(merge(module9_genes, sgs, by = 'Genes'))
+nrow(merge(module10_genes, sgs, by = 'Genes'))
+```
+
+### Determine fold enrichment and FDR (i.e. significantly more RG/metabolic genes)
+
+```{r}
+#We need to find the population amount of RGs in the core orthologs 
+core_orth <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/PRRs/filtered_core_orth.tsv")
+actual_prrs <- core_orth$at[core_orth$at %in% prrs$Genes]
+
+
+#Get expected and observed values
+population_fraction <- length(actual_prrs) / nrow(core_orth)
+observed_counts <- c(0, 6, 0, 1, 9, 3, 11, 17, 6, 8)
+module_sizes <- c(20,  335,  189,   28, 2094,  589,  581,  446,   99, 1270)
+modules <- c("Module1", "Module2", "Module3", "Module4", "Module5", 
+             "Module6", "Module7", "Module8", "Module9", "Module10")
+
+binom_df <- data.frame(
+  Module = modules,
+  Observed = observed_counts,
+  Module_Size = module_sizes
+)
+
+#Binomial test to find p value
+p_values <- numeric(length(observed_counts))
+
+# Perform the binomial test for each module
+for (i in 1:length(observed_counts)) {
+  test_result <- binom.test(observed_counts[i], module_sizes[i], population_fraction)
+  p_values[i] <- test_result$p.value
+}
+
+# Add p-values to the data frame
+binom_df$p_value <- p_values
+binom_df$FDR <- p.adjust(binom_df$p_value, method = "fdr")
+```
+
+### Plot RG Fold Enrichment
+
+```{r}
+#filter for only modules with FDR < 0.05
+binom_df_fdr <- binom_df %>% filter(FDR < 0.05)
+
+level_order <- c("Module1", "Module2", "Module3", "Module4", "Module5", "Module6", "Module7", "Module8", "Module9", "Module10")
+
+ggplot(binom_df, aes(x = (Observed/Module_Size) / population_fraction, y = Module, fill = FDR)) +
+  geom_bar(stat = "identity") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue",
+                      name = "FDR",
+                      breaks = seq(0, 1, by = 0.2),  # Customize the breaks,
+                      limits = c(0, 0.5)) +
+  scale_y_discrete(limits = level_order) +
+  theme_minimal() +
+  labs(title = "Resistance Gene Fold Enrichment by Module", x = "Fold Enrichment", y = "Module") +
+  theme(axis.text.y = element_text(size = 10), axis.title = element_text(size = 12))
+
+ggsave("rg_enrichment_modules.pdf")
+```
