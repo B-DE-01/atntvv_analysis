@@ -1,0 +1,166 @@
+---
+title: "MaSigPro Non-Collinear"
+---
+
+### Load packages
+
+```{r}
+# Load maSigPro library
+library("maSigPro")
+
+# Calling MClust library:
+library(mclust)
+
+# Calling MASS library:
+library(MASS)
+
+library(ggplot2)
+
+library(dplyr)
+```
+
+### Import and format experimental design
+
+```{r}
+edesignat <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Collinear/MaSigPro/at_nt_timepoint_design.txt")
+row.names(edesignat) <- edesignat$X
+edesign <- edesignat[, c(2:ncol(edesignat))]
+rm(edesignat)
+```
+
+### Put columns in the correct order according to the experimental design
+
+```{r}
+core_reps <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/at_nt_bestreps.tsv", sep = "\t")
+
+core_reps$nt <- sub(".*\\|", "", core_reps$nt)
+core_reps$at <- sub(".*\\|", "", core_reps$at)
+
+at_s1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s1_nc_wgcna.csv", sep = ",")
+at_s2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s2_nc_wgcna.csv", sep = ",")
+at_s3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/at_s3_nc_wgcna.csv", sep = ",")
+
+nt_s1 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s1_nc_wgcna.csv", sep = ",")
+nt_s2 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s2_nc_wgcna.csv", sep = ",")
+nt_s3 <- read.delim("/Users/ben/Desktop/Research/Robatzek/Paper R Notebooks/Non-Collinear/WGCNA/nt_s3_nc_wgcna.csv", sep = ",")
+
+remove_zero <- function(df){
+  zero_matrix <- df[, -1]
+  all_zero_rows <- apply(zero_matrix, 1, function(row) all(row == 0))
+  zero_ids <-  df[all_zero_rows, 1]
+  df_filt <- df[!df[, 1] %in% zero_ids, ]
+  
+  return(df_filt)
+}
+
+nt_s1 <- remove_zero(nt_s1)
+nt_s2 <- remove_zero(nt_s2)
+nt_s3 <- remove_zero(nt_s3)
+
+nt_tpm <- merge(nt_s1, nt_s2, by = "GeneId")
+nt_tpm <- merge(nt_tpm, nt_s3, by = "GeneId")
+names(nt_tpm)[names(nt_tpm) == 'GeneId'] <- 'nt'
+nt_tpm <- merge(nt_tpm, core_reps, by = 'nt')
+
+at_tpm <- merge(at_s1, at_s2, by = 'GeneId')
+at_tpm <- merge(at_tpm, at_s3, by = 'GeneId')
+names(at_tpm)[names(at_tpm) == 'GeneId'] <- 'at'
+
+nt_tpm <- nt_tpm[, -c(1,33)]
+nt_tpm$at <- sub("\\.[0-9]+$", "", nt_tpm$at)
+
+total_counts_df <- merge(at_tpm, nt_tpm, by = "at")
+rownames(total_counts_df) <- total_counts_df$at
+total_counts_df <- total_counts_df[, -1]
+
+#Rearrange the total_counts so that it is not 1:30 at and then 1:30 nt, but instead 1:5 at, then 1:5 nt repeated.
+rearranged_df <- data.frame(matrix(ncol = 0, nrow = nrow(total_counts_df)))
+#At S1 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 1:5]) 
+#Nt S1 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 31:35]) 
+#At S2 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 11:15])
+#Nt S2 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 41:45])
+#At S3 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 21:25]) 
+#Nt S3 M
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 51:55]) 
+#At S1 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 6:10]) 
+#Nt S1 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 36:40]) 
+#At S2 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 16:20])
+#Nt S2 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 46:50])
+#At S3 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 26:30]) 
+#Nt S3 X
+rearranged_df <- cbind(rearranged_df, total_counts_df[, 56:60]) 
+
+names(rearranged_df) <- rownames(edesign)
+total_counts_df <- rearranged_df
+#write.table(total_counts_df, file =  "combined_tpm_atnt.tsv", quote = FALSE, sep = '\t', row.names = FALSE)
+
+```
+
+### Convert to maSigPro object (quadratic regression model)
+
+```{r}
+design <- make.design.matrix(edesign, degree = 2)
+```
+
+### \*\*Find the optimal number of clusters for our data sets with Mclust
+
+```{r}
+model <- Mclust(total_counts_df)
+model$G
+
+dist_df <- dist(total_counts_df)
+hclust_model <- hclust(dist_df)
+
+#Optimal Clusters is 9
+
+cluster_df <- as.data.frame(model$classification)
+cluster_df <- cbind(cluster_df, rownames(total_counts_df))
+names(cluster_df) <- c('cluster', 'Geneid')
+cluster_df <- cluster_df %>% arrange(cluster)
+write.table(cluster_df, file = 'atnt_clusters.tsv', sep = '\t', quote = FALSE, row.names = FALSE)
+```
+
+### Model and fit data
+
+```{r}
+d <- make.design.matrix(edesign, degree = 2)
+
+Ntp <- p.vector(total_counts_df, d, counts=FALSE)
+Ntt <- T.fit(Ntp)
+get<-get.siggenes(Ntt, vars="all")
+pdf("test.pdf", width = 10, height = 6)
+par(mfrow = c(2, 2), mar = c(5, 5, 4, 2), cex.axis = 1.2, cex.lab = 1.2, cex.main = 1.4, cex.sub = 1.2)
+gene <- see.genes(get$sig.genes, k = 9, cluster.method = 'Mclust', show.lines = TRUE)
+dev.off()
+write.table(as.data.frame(gene_clusters$cut), file = 'signif_c.tsv', sep = '\t')
+
+```
+
+#### Generate a heatmap of the all genes with R-squared \> 0.99.
+
+```{r}
+highdegenes <- total_counts_df[rownames(total_counts_df) %in% rownames(Ntt$sol[Ntt$sol$`R-squared` > 0.98,]), ]
+heatmap(as.matrix(highdegenes), Rowv = NA, Colv = NA, scale = "row", margins = c(8, 8), xlab = "Stage")
+```
+
+```{r}
+# plot Venn diagram for specific groups
+get_groups <- get.siggenes(Ntt, rsq = 0.6, vars="groups")
+get_groups$summary
+suma2Venn(get_groups$summary)
+```
+
+```{r}
+
+
+```
